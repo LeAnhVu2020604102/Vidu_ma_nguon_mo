@@ -1,0 +1,72 @@
+import tkinter as tk
+import pandas as pd
+
+class GradeReportGenerator:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Chương trình tạo báo cáo học phần")
+        
+        # Tạo các phần tử giao diện
+        self.label_csv_file = tk.Label(root, text="Đường dẫn tệp CSV:")
+        self.label_csv_file.pack()
+
+        self.entry_csv_file = tk.Entry(root)
+        self.entry_csv_file.pack()
+
+        self.button_generate = tk.Button(root, text="Tạo báo cáo", command=self.generate_report)
+        self.button_generate.pack()
+
+        self.text_report = tk.Text(root)
+        self.text_report.pack()
+
+    def generate_report(self):
+        csv_file_path = self.entry_csv_file.get()
+
+        try:
+            # Đọc dữ liệu từ tệp CSV
+            df = pd.read_csv(csv_file_path)
+
+            # Tạo báo cáo từ dữ liệu
+            report = self.generate_grade_report(df)
+
+            # Hiển thị báo cáo trong ô văn bản
+            self.text_report.delete("1.0", tk.END)
+            self.text_report.insert(tk.END, report)
+        except FileNotFoundError:
+            self.text_report.delete("1.0", tk.END)
+            self.text_report.insert(tk.END, "Lỗi: Không tìm thấy tệp CSV!")
+
+    def generate_grade_report(self, df):
+        report = ""
+
+        # Tính toán thông tin tổng quát về báo cáo
+        total_courses = len(df)
+        passed_courses = len(df[df["Tình trạng"] == "Pass"])
+        failed_courses = len(df[df["Tình trạng"] == "Fail"])
+        average_grade = df["Điểm"].mean()
+
+        # Thêm thông tin tổng quát vào báo cáo
+        report += f"Tổng số học phần: {total_courses}\n"
+        report += f"Học phần đã vượt: {passed_courses}\n"
+        report += f"Học phần không vượt: {failed_courses}\n"
+        report += f"Điểm trung bình: {average_grade}\n\n"
+
+        # Thêm thông tin chi tiết về từng học phần vào báo cáo
+        report += "Báo cáo chi tiết:\n"
+        for index, row in df.iterrows():
+            course_code = row["Mã học phần"]
+            course_name = row["Tên học phần"]
+            grade = row["Điểm"]
+            status = row["Tình trạng"]
+
+            report += f"Mã học phần: {course_code}\n"
+            report += f"Tên học phần: {course_name}\n"
+            report += f"Điểm: {grade}\n"
+            report += f"Tình trạng: {status}\n\n"
+
+        return report
+
+# Tạo cửa sổ giao diện
+root = tk.Tk()
+report_generator = GradeReportGenerator(root)
+root.mainloop()
